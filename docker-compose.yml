@@ -5,6 +5,7 @@ services:
     ports:
       - "4566:4566"        # all services on one port
     environment:
+      - LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN}
       - SERVICES=s3,ec2,iam,route53,elbv2,eks,cognito-idp,dynamodb,cloudwatch,logs
       - DEBUG=1
     volumes:
@@ -15,6 +16,7 @@ services:
       context: ../etithe-app
       dockerfile: Dockerfile
     environment:
+      - LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN}
       - NEXT_PUBLIC_APP_URL=http://localhost:3000
       - AUTH_DEMO_EMAIL=admin@church.org
       - AUTH_DEMO_PASSWORD=changeme
