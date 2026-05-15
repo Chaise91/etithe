@@ -1,0 +1,13 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowAssumeFromYourIdentity",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::123456789012:user/YOUR_IAM_USER_OR_ROLE"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}

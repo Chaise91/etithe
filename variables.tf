@@ -1,9 +1,3 @@
-variable "use_localstack" {
-  description = "Whether to use LocalStack for AWS service endpoints"
-  type        = bool
-  default     = false
-}
-
 variable "aws_region" {
   description = "AWS region"
   type        = string

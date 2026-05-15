@@ -1,4 +1,3 @@
-use_localstack = true # flip to false when targeting real AWS
 project_name   = "etithe"
 environment    = "dev"
 aws_region     = "us-east-1"

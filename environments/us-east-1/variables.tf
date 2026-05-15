@@ -1,8 +1,3 @@
-variable "use_localstack" {
-  type    = bool
-  default = true
-}
-
 variable "project_name" {
   type    = string
   default = "etithe"
@@ -71,4 +66,14 @@ variable "app_port" {
 variable "health_check_path" {
   type    = string
   default = "/api/health"
+}
+
+variable "enable_compute" {
+  type    = bool
+  default = true
+}
+
+variable "enable_loadbalancer" {
+  type    = bool
+  default = true
 }

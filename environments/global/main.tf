@@ -12,12 +12,6 @@ terraform {
 }
 
 locals {
-  localstack = var.use_localstack
-
-  aws_endpoints = local.localstack ? {
-    route53 = "http://localhost:4566"
-  } : {}
-
   primary_alb_dns_name = var.use_remote_state ? data.terraform_remote_state.primary[0].outputs.alb_dns_name : var.primary_alb_dns_name
   primary_alb_zone_id  = var.use_remote_state ? data.terraform_remote_state.primary[0].outputs.alb_zone_id : var.primary_alb_zone_id
 
@@ -26,19 +20,7 @@ locals {
 }
 
 provider "aws" {
-  region                      = var.aws_region
-  access_key                  = local.localstack ? "mock_access_key" : null
-  secret_key                  = local.localstack ? "mock_secret_key" : null
-  skip_credentials_validation = local.localstack
-  skip_requesting_account_id  = local.localstack
-  skip_metadata_api_check     = local.localstack
-
-  dynamic "endpoints" {
-    for_each = local.localstack ? [1] : []
-    content {
-      route53 = local.aws_endpoints.route53
-    }
-  }
+  region = var.aws_region
 }
 
 data "terraform_remote_state" "primary" {

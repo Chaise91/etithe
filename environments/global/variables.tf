@@ -1,9 +1,3 @@
-variable "use_localstack" {
-  description = "Whether to use LocalStack for Route53 API endpoints"
-  type        = bool
-  default     = true
-}
-
 variable "use_remote_state" {
   description = "Whether to read ALB outputs from the regional Terraform states"
   type        = bool
