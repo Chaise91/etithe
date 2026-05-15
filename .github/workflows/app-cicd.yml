@@ -89,6 +89,14 @@ jobs:
         run: |
           aws eks update-kubeconfig --name "$CLUSTER_NAME_PRIMARY" --region "$AWS_REGION_PRIMARY"
 
+      - name: Verify Kubernetes API access
+        run: |
+          kubectl auth can-i get namespaces >/dev/null || {
+            echo "Kubernetes API auth failed for role from AWS_ROLE_TO_ASSUME."
+            echo "Add the deployer role to aws-auth mapRoles (or EKS access entries if enabled)."
+            exit 1
+          }
+
       - name: Apply base manifests and update image
         run: |
           kubectl apply -f etithe-app/k8s/base/namespace.yaml
@@ -123,6 +131,14 @@ jobs:
       - name: Configure kubectl
         run: |
           aws eks update-kubeconfig --name "$CLUSTER_NAME_SECONDARY" --region "$AWS_REGION_SECONDARY"
+
+      - name: Verify Kubernetes API access
+        run: |
+          kubectl auth can-i get namespaces >/dev/null || {
+            echo "Kubernetes API auth failed for role from AWS_ROLE_TO_ASSUME."
+            echo "Add the deployer role to aws-auth mapRoles (or EKS access entries if enabled)."
+            exit 1
+          }
 
       - name: Apply base manifests and update image
         run: |
