@@ -1,0 +1,116 @@
+name: eTithe App CI/CD
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "etithe-app/**"
+      - ".github/workflows/app-cicd.yml"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION_PRIMARY: us-east-1
+  AWS_REGION_SECONDARY: us-west-2
+  ECR_REPOSITORY: etithe-app
+  APP_NAMESPACE: etithe
+  APP_DEPLOYMENT: etithe-app
+  APP_CONTAINER: etithe-app
+  CLUSTER_NAME_PRIMARY: etithe-us-east-1-cluster
+  CLUSTER_NAME_SECONDARY: etithe-us-west-2-cluster
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    outputs:
+      image_uri: ${{ steps.vars.outputs.image_uri }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION_PRIMARY }}
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Compute image URI
+        id: vars
+        run: |
+          SHORT_SHA="${GITHUB_SHA::12}"
+          IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:${SHORT_SHA}"
+          echo "image_uri=${IMAGE_URI}" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure ECR repository exists
+        run: |
+          aws ecr describe-repositories --repository-names "$ECR_REPOSITORY" >/dev/null 2>&1 || \
+          aws ecr create-repository --repository-name "$ECR_REPOSITORY" --image-scanning-configuration scanOnPush=true
+
+      - name: Build image
+        run: |
+          docker build -t "${{ steps.vars.outputs.image_uri }}" -f etithe-app/Dockerfile etithe-app
+
+      - name: Push image
+        run: |
+          docker push "${{ steps.vars.outputs.image_uri }}"
+
+  deploy-primary:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION_PRIMARY }}
+
+      - name: Configure kubectl
+        run: |
+          aws eks update-kubeconfig --name "$CLUSTER_NAME_PRIMARY" --region "$AWS_REGION_PRIMARY"
+
+      - name: Apply base manifests and update image
+        run: |
+          kubectl apply -f etithe-app/k8s/base/namespace.yaml
+          kubectl apply -f etithe-app/k8s/base/service.yaml
+          sed "s|PLACEHOLDER_IMAGE|${{ needs.build-and-push.outputs.image_uri }}|g" etithe-app/k8s/base/deployment.yaml | kubectl apply -f -
+          kubectl -n "$APP_NAMESPACE" rollout status deployment/"$APP_DEPLOYMENT" --timeout=300s
+
+  deploy-secondary:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION_SECONDARY }}
+
+      - name: Configure kubectl
+        run: |
+          aws eks update-kubeconfig --name "$CLUSTER_NAME_SECONDARY" --region "$AWS_REGION_SECONDARY"
+
+      - name: Apply base manifests and update image
+        run: |
+          kubectl apply -f etithe-app/k8s/base/namespace.yaml
+          kubectl apply -f etithe-app/k8s/base/service.yaml
+          sed "s|PLACEHOLDER_IMAGE|${{ needs.build-and-push.outputs.image_uri }}|g" etithe-app/k8s/base/deployment.yaml | kubectl apply -f -
+          kubectl -n "$APP_NAMESPACE" rollout status deployment/"$APP_DEPLOYMENT" --timeout=300s
