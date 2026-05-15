@@ -10,6 +10,12 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
+variable "aws_profile" {
+  description = "AWS CLI profile used by Terraform"
+  type        = string
+  default     = "etithe"
+}
+
 variable "project_name" {
   description = "Project name used for tags"
   type        = string

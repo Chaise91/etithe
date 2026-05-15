@@ -77,6 +77,14 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION_PRIMARY }}
 
+      - name: Verify primary cluster exists
+        run: |
+          if ! aws eks describe-cluster --name "$CLUSTER_NAME_PRIMARY" --region "$AWS_REGION_PRIMARY" >/dev/null 2>&1; then
+            echo "Primary EKS cluster '$CLUSTER_NAME_PRIMARY' not found in region '$AWS_REGION_PRIMARY'."
+            echo "Provision infrastructure first (terraform apply in environments/us-east-1), then rerun this workflow."
+            exit 1
+          fi
+
       - name: Configure kubectl
         run: |
           aws eks update-kubeconfig --name "$CLUSTER_NAME_PRIMARY" --region "$AWS_REGION_PRIMARY"
@@ -103,6 +111,14 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION_SECONDARY }}
+
+      - name: Verify secondary cluster exists
+        run: |
+          if ! aws eks describe-cluster --name "$CLUSTER_NAME_SECONDARY" --region "$AWS_REGION_SECONDARY" >/dev/null 2>&1; then
+            echo "Secondary EKS cluster '$CLUSTER_NAME_SECONDARY' not found in region '$AWS_REGION_SECONDARY'."
+            echo "Provision infrastructure first (terraform apply in environments/us-west-2), then rerun this workflow."
+            exit 1
+          fi
 
       - name: Configure kubectl
         run: |

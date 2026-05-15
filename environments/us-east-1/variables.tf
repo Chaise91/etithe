@@ -13,6 +13,11 @@ variable "aws_region" {
   default = "us-east-1"
 }
 
+variable "aws_profile" {
+  type    = string
+  default = "etithe"
+}
+
 variable "vpc_cidr" {
   type    = string
   default = "10.20.0.0/16"
@@ -35,7 +40,7 @@ variable "availability_zones" {
 
 variable "kubernetes_version" {
   type    = string
-  default = "1.32"
+  default = "1.35"
 }
 
 variable "node_instance_type" {
