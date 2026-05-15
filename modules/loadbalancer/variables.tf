@@ -30,6 +30,30 @@ variable "health_check_path" {
   default     = "/api/health"
 }
 
+variable "enable_access_logs" {
+  description = "Whether to enable ALB access logs to S3"
+  type        = bool
+  default     = true
+}
+
+variable "enable_alarms" {
+  description = "Whether to create CloudWatch alarms for the ALB"
+  type        = bool
+  default     = true
+}
+
+variable "access_logs_prefix" {
+  description = "Prefix for ALB access logs in S3"
+  type        = string
+  default     = "alb"
+}
+
+variable "access_logs_force_destroy" {
+  description = "Whether to purge ALB access log bucket objects before bucket deletion"
+  type        = bool
+  default     = true
+}
+
 variable "tags" {
   description = "Common tags to apply to resources"
   type        = map(string)

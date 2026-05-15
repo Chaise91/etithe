@@ -48,6 +48,12 @@ variable "node_max" {
   default     = 4
 }
 
+variable "cluster_log_types" {
+  description = "EKS control plane log types to enable"
+  type        = list(string)
+  default     = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+}
+
 variable "tags" {
   description = "Common tags to apply to resources"
   type        = map(string)

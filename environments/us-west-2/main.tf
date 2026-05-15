@@ -38,7 +38,7 @@ module "networking" {
 }
 
 module "compute" {
-  count = var.enable_compute ? 1 : 0
+  count  = var.enable_compute ? 1 : 0
   source = "../../modules/compute"
 
   name               = "${var.project_name}-${var.aws_region}"
@@ -92,7 +92,7 @@ output "cluster_endpoint" {
 }
 
 output "oidc_provider_arn" {
-value = var.enable_compute ? module.compute[0].oidc_provider_arn : null
+  value = var.enable_compute ? module.compute[0].oidc_provider_arn : null
 }
 
 output "alb_dns_name" {
@@ -100,7 +100,7 @@ output "alb_dns_name" {
 }
 
 output "alb_zone_id" {
-value = var.enable_compute && var.enable_loadbalancer ? module.loadbalancer[0].alb_zone_id : null
+  value = var.enable_compute && var.enable_loadbalancer ? module.loadbalancer[0].alb_zone_id : null
 }
 
 output "target_group_arn" {

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { donationSeed } from "@/lib/mock-data";
 import { readSessionFromCookies } from "@/lib/auth";
+import { withRequestLogging } from "@/lib/request-logging";
 
-export async function GET(request: Request) {
+async function handleDonations(request: Request) {
   const session = await readSessionFromCookies();
   if (!session) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -20,3 +21,5 @@ export async function GET(request: Request) {
     donations,
   });
 }
+
+export const GET = withRequestLogging("api/donations", handleDonations);

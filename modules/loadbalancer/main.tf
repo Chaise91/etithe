@@ -1,3 +1,97 @@
+# ── Data sources ──────────────────────────────────────────────────────────────
+
+data "aws_caller_identity" "current" {}
+
+# ── ALB access log bucket ─────────────────────────────────────────────────────
+
+resource "aws_s3_bucket" "alb_logs" {
+  count         = var.enable_access_logs ? 1 : 0
+  bucket        = "${var.name}-alb-logs"
+  force_destroy = var.access_logs_force_destroy
+
+  tags = merge(var.tags, { Name = "${var.name}-alb-logs" })
+}
+
+resource "aws_s3_bucket_public_access_block" "alb_logs" {
+  count  = var.enable_access_logs ? 1 : 0
+  bucket = aws_s3_bucket.alb_logs[0].id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_versioning" "alb_logs" {
+  count  = var.enable_access_logs ? 1 : 0
+  bucket = aws_s3_bucket.alb_logs[0].id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "alb_logs" {
+  count  = var.enable_access_logs ? 1 : 0
+  bucket = aws_s3_bucket.alb_logs[0].id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "alb_logs" {
+  count  = var.enable_access_logs ? 1 : 0
+  bucket = aws_s3_bucket.alb_logs[0].id
+
+  rule {
+    id     = "expire-old-logs"
+    status = "Enabled"
+
+    filter {}
+
+    expiration {
+      days = 30
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "alb_logs" {
+  count  = var.enable_access_logs ? 1 : 0
+  bucket = aws_s3_bucket.alb_logs[0].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AWSLogDeliveryAclCheck"
+        Effect = "Allow"
+        Principal = {
+          Service = "logdelivery.elasticloadbalancing.amazonaws.com"
+        }
+        Action   = "s3:GetBucketAcl"
+        Resource = aws_s3_bucket.alb_logs[0].arn
+      },
+      {
+        Sid    = "AWSLogDeliveryWrite"
+        Effect = "Allow"
+        Principal = {
+          Service = "logdelivery.elasticloadbalancing.amazonaws.com"
+        }
+        Action   = "s3:PutObject"
+        Resource = "${aws_s3_bucket.alb_logs[0].arn}/${var.access_logs_prefix}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl" = "bucket-owner-full-control"
+          }
+        }
+      }
+    ]
+  })
+}
+
 # ── ALB security group ────────────────────────────────────────────────────────
 
 resource "aws_security_group" "alb" {
@@ -52,6 +146,16 @@ resource "aws_lb" "this" {
   security_groups    = [aws_security_group.alb.id]
   subnets            = var.public_subnet_ids
 
+  dynamic "access_logs" {
+    for_each = var.enable_access_logs ? [1] : []
+
+    content {
+      bucket  = aws_s3_bucket.alb_logs[0].bucket
+      prefix  = var.access_logs_prefix
+      enabled = true
+    }
+  }
+
   enable_deletion_protection = false
 
   tags = merge(var.tags, { Name = "${var.name}-alb" })
@@ -93,4 +197,45 @@ resource "aws_lb_listener" "http" {
   }
 
   tags = merge(var.tags, { Name = "${var.name}-http-listener" })
+}
+
+# ── CloudWatch alarms ────────────────────────────────────────────────────────
+
+resource "aws_cloudwatch_metric_alarm" "target_5xx" {
+  count               = var.enable_alarms ? 1 : 0
+  alarm_name          = "${var.name}-target-5xx"
+  alarm_description   = "Target 5xx responses for ${var.name} ALB"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 2
+  datapoints_to_alarm = 2
+  threshold           = 1
+  treat_missing_data  = "notBreaching"
+  metric_name         = "HTTPCode_Target_5XX_Count"
+  namespace           = "AWS/ApplicationELB"
+  period              = 60
+  statistic           = "Sum"
+
+  dimensions = {
+    LoadBalancer = aws_lb.this.arn_suffix
+    TargetGroup  = aws_lb_target_group.app.arn_suffix
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "elb_5xx" {
+  count               = var.enable_alarms ? 1 : 0
+  alarm_name          = "${var.name}-elb-5xx"
+  alarm_description   = "ALB 5xx responses for ${var.name}"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 2
+  datapoints_to_alarm = 2
+  threshold           = 1
+  treat_missing_data  = "notBreaching"
+  metric_name         = "HTTPCode_ELB_5XX_Count"
+  namespace           = "AWS/ApplicationELB"
+  period              = 60
+  statistic           = "Sum"
+
+  dimensions = {
+    LoadBalancer = aws_lb.this.arn_suffix
+  }
 }

@@ -41,7 +41,7 @@ resource "aws_route53_record" "primary" {
   name    = local.fqdn
   type    = "A"
 
-  set_identifier  = "primary"
+  set_identifier = "primary"
   failover_routing_policy {
     type = "PRIMARY"
   }
@@ -60,7 +60,7 @@ resource "aws_route53_record" "secondary" {
   name    = local.fqdn
   type    = "A"
 
-  set_identifier  = "secondary"
+  set_identifier = "secondary"
   failover_routing_policy {
     type = "SECONDARY"
   }

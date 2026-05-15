@@ -2,13 +2,14 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { buildSession, encodeSession, SESSION_COOKIE, validateCredentials } from "@/lib/auth";
+import { withRequestLogging } from "@/lib/request-logging";
 
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 });
 
-export async function POST(request: Request) {
+async function handleLogin(request: Request) {
   const payload = await request.json().catch(() => null);
   const parsed = loginSchema.safeParse(payload);
 
@@ -37,3 +38,5 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ ok: true });
 }
+
+export const POST = withRequestLogging("api/auth/login", handleLogin);
