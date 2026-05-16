@@ -1,7 +1,13 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { buildSession, encodeSession, SESSION_COOKIE, validateCredentials } from "@/lib/auth";
+import {
+  buildSession,
+  encodeSession,
+  SESSION_COOKIE,
+  shouldUseSecureCookies,
+  validateCredentials,
+} from "@/lib/auth";
 import { withRequestLogging } from "@/lib/request-logging";
 
 const loginSchema = z.object({
@@ -25,13 +31,14 @@ async function handleLogin(request: Request) {
   const session = buildSession(email);
   const sessionToken = encodeSession(session);
   const store = await cookies();
+  const secure = shouldUseSecureCookies(request);
 
   store.set({
     name: SESSION_COOKIE,
     value: sessionToken,
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure,
     path: "/",
     maxAge: 60 * 60 * 8,
   });

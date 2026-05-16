@@ -67,7 +67,8 @@ module "loadbalancer" {
   name                   = "${var.project_name}-${var.aws_region}"
   vpc_id                 = module.networking.vpc_id
   public_subnet_ids      = module.networking.public_subnet_ids
-  node_security_group_id = module.compute[0].node_security_group_id
+  node_security_group_id = module.compute[0].cluster_primary_security_group_id
+  node_group_asg_names   = module.compute[0].node_group_asg_names
   app_port               = var.app_port
   health_check_path      = var.health_check_path
 

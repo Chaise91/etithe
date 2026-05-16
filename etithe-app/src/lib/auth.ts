@@ -29,6 +29,16 @@ export function encodeSession(session: SessionClaims): string {
   return Buffer.from(JSON.stringify(session)).toString("base64url");
 }
 
+export function shouldUseSecureCookies(request: Request): boolean {
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+
+  if (forwardedProto) {
+    return forwardedProto.split(",")[0].trim() === "https";
+  }
+
+  return new URL(request.url).protocol === "https:";
+}
+
 export function decodeSession(value: string | undefined): SessionClaims | null {
   if (!value) {
     return null;

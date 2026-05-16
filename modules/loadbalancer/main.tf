@@ -164,11 +164,15 @@ resource "aws_lb" "this" {
 # ── Target group ──────────────────────────────────────────────────────────────
 
 resource "aws_lb_target_group" "app" {
-  name        = "${var.name}-tg"
+  name        = "${var.name}-tg-v2"
   port        = var.app_port
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
-  target_type = "ip"
+  target_type = "instance"
+
+  lifecycle {
+    create_before_destroy = true
+  }
 
   health_check {
     enabled             = true
@@ -182,6 +186,13 @@ resource "aws_lb_target_group" "app" {
   }
 
   tags = merge(var.tags, { Name = "${var.name}-tg" })
+}
+
+resource "aws_autoscaling_attachment" "nodes_to_tg" {
+  for_each = toset(var.node_group_asg_names)
+
+  autoscaling_group_name = each.value
+  lb_target_group_arn    = aws_lb_target_group.app.arn
 }
 
 # ── HTTP listener (port 80) ───────────────────────────────────────────────────

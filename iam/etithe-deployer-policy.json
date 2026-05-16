@@ -6,6 +6,7 @@
       "Effect": "Allow",
       "Action": [
         "ec2:Describe*",
+        "autoscaling:DescribeAutoScalingGroups",
         "eks:Describe*",
         "eks:List*",
         "eks:DescribeAccessEntry",
@@ -110,6 +111,8 @@
       "Sid": "AllowAlbLifecycle",
       "Effect": "Allow",
       "Action": [
+        "autoscaling:AttachLoadBalancerTargetGroups",
+        "autoscaling:DetachLoadBalancerTargetGroups",
         "elasticloadbalancing:CreateLoadBalancer",
         "elasticloadbalancing:DeleteLoadBalancer",
         "elasticloadbalancing:CreateTargetGroup",

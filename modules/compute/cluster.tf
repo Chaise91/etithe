@@ -81,6 +81,11 @@ resource "aws_security_group" "eks_nodes" {
   description = "EKS worker node security group"
   vpc_id      = var.vpc_id
 
+  lifecycle {
+    # Allow other modules (like load balancer) to manage additional ingress rules.
+    ignore_changes = [ingress]
+  }
+
   ingress {
     from_port   = 0
     to_port     = 0

@@ -17,6 +17,7 @@ CLUSTER_NAME_SECONDARY="etithe-us-west-2-cluster"
 ECR_REPOSITORY="etithe-app"
 APP_NAMESPACE="etithe"
 SKIP_SECONDARY="false"
+DOCKER_PLATFORM="linux/amd64"
 
 usage() {
   cat <<EOF
@@ -79,7 +80,7 @@ echo "Logging in to ECR"
 AWS_PROFILE="$AWS_PROFILE" aws ecr get-login-password --region "$AWS_REGION_PRIMARY" | docker login --username AWS --password-stdin "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION_PRIMARY.amazonaws.com"
 
 echo "Building and pushing image"
-docker build -t "$IMAGE_URI" -f "$ROOT_DIR/etithe-app/Dockerfile" "$ROOT_DIR/etithe-app"
+docker build --platform "$DOCKER_PLATFORM" -t "$IMAGE_URI" -f "$ROOT_DIR/etithe-app/Dockerfile" "$ROOT_DIR/etithe-app"
 docker push "$IMAGE_URI"
 
 deploy_cluster() {

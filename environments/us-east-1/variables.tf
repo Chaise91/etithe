@@ -65,7 +65,7 @@ variable "node_max" {
 
 variable "app_port" {
   type    = number
-  default = 3000
+  default = 30080
 }
 
 variable "health_check_path" {

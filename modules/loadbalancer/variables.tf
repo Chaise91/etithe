@@ -18,8 +18,13 @@ variable "node_security_group_id" {
   type        = string
 }
 
+variable "node_group_asg_names" {
+  description = "Auto Scaling Group names for the EKS managed node groups"
+  type        = list(string)
+}
+
 variable "app_port" {
-  description = "Port the Next.js app listens on inside the cluster"
+  description = "NodePort exposed by the Kubernetes service that receives ALB traffic"
   type        = number
   default     = 3000
 }
