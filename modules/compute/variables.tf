@@ -54,6 +54,18 @@ variable "cluster_log_types" {
   default     = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 }
 
+variable "enable_ci_deployer_access" {
+  description = "Whether to grant cluster admin access to the CI deployer IAM role"
+  type        = bool
+  default     = true
+}
+
+variable "ci_deployer_role_name" {
+  description = "IAM role name used by CI/CD to deploy to the cluster"
+  type        = string
+  default     = "etithe-infra-deployer-role"
+}
+
 variable "tags" {
   description = "Common tags to apply to resources"
   type        = map(string)

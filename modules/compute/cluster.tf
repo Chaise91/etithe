@@ -1,5 +1,11 @@
 # ── IAM: cluster role ────────────────────────────────────────────────────────
 
+data "aws_caller_identity" "current" {}
+
+locals {
+  ci_deployer_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.ci_deployer_role_name}"
+}
+
 resource "aws_iam_role" "eks_cluster" {
   name = "${var.name}-eks-cluster-role"
 
@@ -111,6 +117,11 @@ resource "aws_eks_cluster" "this" {
 
   enabled_cluster_log_types = var.cluster_log_types
 
+  access_config {
+    authentication_mode                         = "API_AND_CONFIG_MAP"
+    bootstrap_cluster_creator_admin_permissions = true
+  }
+
   vpc_config {
     subnet_ids              = concat(var.public_subnet_ids, var.private_subnet_ids)
     security_group_ids      = [aws_security_group.eks_cluster.id]
@@ -163,4 +174,24 @@ resource "aws_eks_node_group" "this" {
   ]
 
   tags = merge(var.tags, { Name = "${var.name}-nodes" })
+}
+
+resource "aws_eks_access_entry" "ci_deployer" {
+  count         = var.enable_ci_deployer_access ? 1 : 0
+  cluster_name  = aws_eks_cluster.this.name
+  principal_arn = local.ci_deployer_role_arn
+  type          = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "ci_deployer_admin" {
+  count         = var.enable_ci_deployer_access ? 1 : 0
+  cluster_name  = aws_eks_cluster.this.name
+  principal_arn = local.ci_deployer_role_arn
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+
+  access_scope {
+    type = "cluster"
+  }
+
+  depends_on = [aws_eks_access_entry.ci_deployer]
 }
