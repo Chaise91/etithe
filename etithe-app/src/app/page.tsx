@@ -14,6 +14,9 @@ export default function HomePage() {
           <Link href="/login" className="button primary">
             Sign in
           </Link>
+          <Link href="/admin" className="button ghost">
+            Admin portal
+          </Link>
           <Link href="/dashboard" className="button ghost">
             View dashboard
           </Link>

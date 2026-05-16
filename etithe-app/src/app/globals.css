@@ -123,7 +123,49 @@ input {
   gap: 12px;
 }
 
+.stats-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.stat-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  background: linear-gradient(165deg, #ffffff, #f7faf6);
+}
+
+.stat-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.stat-card h2 {
+  margin: 8px 0 0;
+  font-size: 1.3rem;
+  line-height: 1.2;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  border: 1px solid #9bc9be;
+  color: #0b5446;
+  background: #ebf8f3;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
 @media (max-width: 720px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .table {
     display: block;
     overflow-x: auto;
