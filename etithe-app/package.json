@@ -6,20 +6,29 @@
     "dev": "next dev -H 0.0.0.0 -p 3000",
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3000",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:seed": "tsx src/db/seed.ts",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "drizzle-orm": "^0.45.2",
     "next": "^15.5.14",
+    "pg": "^8.20.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "zod": "3.24.2"
   },
   "devDependencies": {
     "@types/node": "22.13.8",
+    "@types/pg": "^8.20.0",
     "@types/react": "19.1.0",
     "@types/react-dom": "19.1.0",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9.39.4",
     "eslint-config-next": "15.3.1",
+    "tsx": "^4.22.0",
     "typescript": "5.8.2"
   }
 }

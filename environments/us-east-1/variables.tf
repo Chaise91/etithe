@@ -82,3 +82,38 @@ variable "enable_loadbalancer" {
   type    = bool
   default = true
 }
+
+variable "enable_database" {
+  type    = bool
+  default = true
+}
+
+variable "database_instance_class" {
+  type    = string
+  default = "db.t4g.micro"
+}
+
+variable "database_allocated_storage" {
+  type    = number
+  default = 20
+}
+
+variable "database_backup_retention_period" {
+  type    = number
+  default = 1
+}
+
+variable "database_name" {
+  type    = string
+  default = "etithe"
+}
+
+variable "database_master_username" {
+  type    = string
+  default = "etithe_admin"
+}
+
+variable "database_allowed_cidr_blocks" {
+  type    = list(string)
+  default = ["10.20.11.0/24", "10.20.12.0/24"]
+}

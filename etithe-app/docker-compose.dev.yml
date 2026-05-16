@@ -1,0 +1,25 @@
+# docker-compose.dev.yml — local PostgreSQL for development
+# Matches the same DB name, user, and schema as the RDS instance in us-east-1.
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml up -d
+#   docker compose -f docker-compose.dev.yml down
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: etithe
+      POSTGRES_USER: etithe_admin
+      POSTGRES_PASSWORD: localdevpassword
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U etithe_admin -d etithe"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_dev_data:

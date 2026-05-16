@@ -80,6 +80,28 @@ module "loadbalancer" {
   }
 }
 
+module "database" {
+  count  = var.enable_database ? 1 : 0
+  source = "../../modules/database"
+
+  name                    = "${var.project_name}-${var.aws_region}"
+  vpc_id                  = module.networking.vpc_id
+  private_subnet_ids      = module.networking.private_subnet_ids
+  allowed_cidr_blocks     = var.database_allowed_cidr_blocks
+  instance_class          = var.database_instance_class
+  allocated_storage       = var.database_allocated_storage
+  db_name                 = var.database_name
+  master_username         = var.database_master_username
+  backup_retention_period = var.database_backup_retention_period
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+    Region      = var.aws_region
+    ManagedBy   = "terraform"
+  }
+}
+
 output "vpc_id" {
   value = module.networking.vpc_id
 }
@@ -106,4 +128,24 @@ output "alb_zone_id" {
 
 output "target_group_arn" {
   value = var.enable_compute && var.enable_loadbalancer ? module.loadbalancer[0].target_group_arn : null
+}
+
+output "database_endpoint" {
+  value = var.enable_database ? module.database[0].db_endpoint : null
+}
+
+output "database_port" {
+  value = var.enable_database ? module.database[0].db_port : null
+}
+
+output "database_name" {
+  value = var.enable_database ? module.database[0].db_name : null
+}
+
+output "database_master_username" {
+  value = var.enable_database ? module.database[0].master_username : null
+}
+
+output "database_master_secret_arn" {
+  value = var.enable_database ? module.database[0].master_user_secret_arn : null
 }

@@ -1,5 +1,6 @@
 enable_compute       = true
 enable_loadbalancer  = true
+enable_database      = false
 project_name         = "etithe"
 environment          = "dev"
 aws_region           = "us-west-2"

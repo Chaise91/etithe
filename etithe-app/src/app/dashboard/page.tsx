@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import { eq } from "drizzle-orm";
+import { getDb } from "@/db";
+import { donations, organizations } from "@/db/schema";
 import { readSessionFromCookies } from "@/lib/auth";
-import { donationSeed } from "@/lib/mock-data";
 
 function money(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -18,11 +20,21 @@ export default async function DashboardPage() {
   }
 
   const authedSession = session;
-  const donations = donationSeed.filter(
-    (donation) => donation.organizationId === authedSession.organizationId,
-  );
+  const db = getDb();
 
-  const total = donations.reduce((sum, donation) => sum + donation.amountUsd, 0);
+  const [orgRows, donationRows] = await Promise.all([
+    db
+      .select({ name: organizations.name })
+      .from(organizations)
+      .where(eq(organizations.id, authedSession.organizationId)),
+    db
+      .select()
+      .from(donations)
+      .where(eq(donations.organizationId, authedSession.organizationId)),
+  ]);
+
+  const orgName = orgRows[0]?.name ?? authedSession.organizationId;
+  const totalUsd = donationRows.reduce((sum, d) => sum + d.amountCents / 100, 0);
 
   return (
     <main className="shell">
@@ -30,8 +42,8 @@ export default async function DashboardPage() {
         <div className="header-row">
           <div>
             <p className="eyebrow">Dashboard</p>
-            <h1 style={{ marginTop: 4, marginBottom: 6 }}>{authedSession.organizationId}</h1>
-            <p style={{ marginTop: 0, color: "var(--muted)" }}>Total received: {money(total)}</p>
+            <h1 style={{ marginTop: 4, marginBottom: 6 }}>{orgName}</h1>
+            <p style={{ marginTop: 0, color: "var(--muted)" }}>Total received: {money(totalUsd)}</p>
           </div>
           <form action="/api/auth/logout" method="post">
             <button className="button ghost" type="submit">
@@ -50,11 +62,11 @@ export default async function DashboardPage() {
             </tr>
           </thead>
           <tbody>
-            {donations.map((donation) => (
+            {donationRows.map((donation) => (
               <tr key={donation.id}>
                 <td>{donation.id}</td>
                 <td>{donation.donorName}</td>
-                <td>{money(donation.amountUsd)}</td>
+                <td>{money(donation.amountCents / 100)}</td>
                 <td>{new Date(donation.donatedAt).toLocaleString()}</td>
               </tr>
             ))}

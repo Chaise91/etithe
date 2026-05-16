@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import {
   buildSession,
+  buildSessionFromDb,
   encodeSession,
   SESSION_COOKIE,
   shouldUseSecureCookies,
@@ -28,7 +29,10 @@ async function handleLogin(request: Request) {
     return NextResponse.json({ message: "Invalid email or password" }, { status: 401 });
   }
 
-  const session = buildSession(email);
+  // Try to resolve the session from the database; fall back to demo org if DB user not found.
+  const session =
+    (await buildSessionFromDb(email)) ??
+    buildSession(email, "org_st_mark", "org_admin");
   const sessionToken = encodeSession(session);
   const store = await cookies();
   const secure = shouldUseSecureCookies(request);
