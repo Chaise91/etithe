@@ -8,7 +8,7 @@ export const SESSION_COOKIE = "etithe_session";
 export type SessionClaims = {
   userId: string;
   organizationId: string;
-  role: "org_admin" | "parishioner";
+  role: "platform_admin" | "org_admin" | "parishioner";
 };
 
 const FALLBACK_EMAIL = "admin@church.org";
