@@ -97,6 +97,25 @@ jobs:
             exit 1
           }
 
+      - name: Validate required secrets
+        run: |
+          MISSING_SECRETS=""
+          [[ -z "${{ secrets.AUTH_DEMO_EMAIL }}" ]] && MISSING_SECRETS="${MISSING_SECRETS}AUTH_DEMO_EMAIL, "
+          [[ -z "${{ secrets.AUTH_DEMO_PASSWORD }}" ]] && MISSING_SECRETS="${MISSING_SECRETS}AUTH_DEMO_PASSWORD, "
+          [[ -z "${{ secrets.AUTH_PLATFORM_EMAIL }}" ]] && MISSING_SECRETS="${MISSING_SECRETS}AUTH_PLATFORM_EMAIL, "
+          [[ -z "${{ secrets.AUTH_PLATFORM_PASSWORD }}" ]] && MISSING_SECRETS="${MISSING_SECRETS}AUTH_PLATFORM_PASSWORD, "
+          [[ -z "${{ secrets.DATABASE_URL_PRIMARY }}" ]] && MISSING_SECRETS="${MISSING_SECRETS}DATABASE_URL_PRIMARY, "
+          
+          if [[ -n "$MISSING_SECRETS" ]]; then
+            echo "❌ FATAL: Missing or empty GitHub Actions secrets:"
+            echo "   ${MISSING_SECRETS%??}"
+            echo ""
+            echo "Add them to: Settings → Secrets and variables → Actions"
+            echo "See GITHUB_SECRETS_SETUP.md for details."
+            exit 1
+          fi
+          echo "✓ All required secrets present"
+
       - name: Upsert Kubernetes secrets
         run: |
           kubectl apply -f etithe-app/k8s/base/namespace.yaml
@@ -153,6 +172,25 @@ jobs:
             echo "Add the deployer role to aws-auth mapRoles (or EKS access entries if enabled)."
             exit 1
           }
+
+      - name: Validate required secrets
+        run: |
+          MISSING_SECRETS=""
+          [[ -z "${{ secrets.AUTH_DEMO_EMAIL }}" ]] && MISSING_SECRETS="${MISSING_SECRETS}AUTH_DEMO_EMAIL, "
+          [[ -z "${{ secrets.AUTH_DEMO_PASSWORD }}" ]] && MISSING_SECRETS="${MISSING_SECRETS}AUTH_DEMO_PASSWORD, "
+          [[ -z "${{ secrets.AUTH_PLATFORM_EMAIL }}" ]] && MISSING_SECRETS="${MISSING_SECRETS}AUTH_PLATFORM_EMAIL, "
+          [[ -z "${{ secrets.AUTH_PLATFORM_PASSWORD }}" ]] && MISSING_SECRETS="${MISSING_SECRETS}AUTH_PLATFORM_PASSWORD, "
+          [[ -z "${{ secrets.DATABASE_URL_SECONDARY }}" ]] && MISSING_SECRETS="${MISSING_SECRETS}DATABASE_URL_SECONDARY, "
+          
+          if [[ -n "$MISSING_SECRETS" ]]; then
+            echo "❌ FATAL: Missing or empty GitHub Actions secrets:"
+            echo "   ${MISSING_SECRETS%??}"
+            echo ""
+            echo "Add them to: Settings → Secrets and variables → Actions"
+            echo "See GITHUB_SECRETS_SETUP.md for details."
+            exit 1
+          fi
+          echo "✓ All required secrets present"
 
       - name: Upsert Kubernetes secrets
         run: |

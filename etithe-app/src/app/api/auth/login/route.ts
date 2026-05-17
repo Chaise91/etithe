@@ -17,6 +17,15 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+async function buildSessionFromDbSafe(email: string) {
+  try {
+    return await buildSessionFromDb(email);
+  } catch {
+    // If DB is unavailable, allow credential-validated logins to continue with fallback session data.
+    return null;
+  }
+}
+
 async function handleLogin(request: Request) {
   const payload = await request.json().catch(() => null);
   const parsed = loginSchema.safeParse(payload);
@@ -29,7 +38,7 @@ async function handleLogin(request: Request) {
 
   // Platform admin credentials → root session (checked first to avoid DB lookup)
   if (validatePlatformAdminCredentials(email, password)) {
-    const session = (await buildSessionFromDb(email)) ??
+    const session = (await buildSessionFromDbSafe(email)) ??
       buildSession(email, "org_platform", "platform_admin");
     const sessionToken = encodeSession(session);
     const store = await cookies();
@@ -52,7 +61,7 @@ async function handleLogin(request: Request) {
 
   // Try to resolve the session from the database; fall back to demo org if DB user not found.
   const session =
-    (await buildSessionFromDb(email)) ??
+    (await buildSessionFromDbSafe(email)) ??
     buildSession(email, "org_st_mark", "org_admin");
   const sessionToken = encodeSession(session);
   const store = await cookies();
