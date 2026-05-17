@@ -5,7 +5,6 @@ import { randomBytes } from "crypto";
 import { getDb } from "@/db";
 import { onboardingRequests, organizations, auditLog } from "@/db/schema";
 import { readSessionFromCookies } from "@/lib/auth";
-import { withRequestLogging } from "@/lib/request-logging";
 
 const reviewSchema = z.object({
   status: z.enum(["under_review", "approved", "rejected"]),
@@ -56,7 +55,7 @@ async function handlePatch(
     await db
       .update(onboardingRequests)
       .set({
-        status: status as any,
+        status,
         reviewedAt: new Date(),
         reviewedBy: session.userId,
         notes: notes || null,

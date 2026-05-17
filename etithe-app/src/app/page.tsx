@@ -8,11 +8,14 @@ export default function HomePage() {
         <h1>eTithe Platform</h1>
         <p>
           Organizations can manage donation visibility while parishioners contribute securely.
-          This starter build includes demo auth and donation dashboards.
+          This starter build includes demo auth, onboarding review, and donation dashboards.
         </p>
         <div className="actions">
           <Link href="/login" className="button primary">
             Sign in
+          </Link>
+          <Link href="/onboarding" className="button ghost">
+            Start onboarding
           </Link>
           <Link href="/admin" className="button ghost">
             Admin portal

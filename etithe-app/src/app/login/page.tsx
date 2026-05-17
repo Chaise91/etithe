@@ -66,6 +66,13 @@ export default function LoginPage() {
           <button type="submit" className="button primary" disabled={loading}>
             {loading ? "Signing in..." : "Sign in"}
           </button>
+
+          <p style={{ margin: 0, color: "var(--muted)", fontSize: "0.92rem" }}>
+            Need to register your organization?{" "}
+            <a href="/onboarding" style={{ color: "var(--accent)", textDecoration: "underline" }}>
+              Submit an onboarding request
+            </a>
+          </p>
         </form>
       </section>
     </main>

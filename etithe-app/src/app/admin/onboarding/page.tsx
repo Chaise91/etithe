@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { eq, inArray } from "drizzle-orm";
 import { getDb } from "@/db";
@@ -18,7 +19,7 @@ export default async function AdminOnboardingPage() {
         <section className="card">
           <h1>Access Denied</h1>
           <p style={{ color: "var(--muted)" }}>
-            You don't have permission to access this page.
+            You don&apos;t have permission to access this page.
           </p>
         </section>
       </main>
@@ -110,7 +111,7 @@ export default async function AdminOnboardingPage() {
                         </span>
                       </td>
                       <td>
-                        <a
+                        <Link
                           href={`/admin/onboarding/${request.id}`}
                           style={{
                             color: "var(--primary)",
@@ -119,7 +120,7 @@ export default async function AdminOnboardingPage() {
                           }}
                         >
                           Review
-                        </a>
+                        </Link>
                       </td>
                     </tr>
                   );

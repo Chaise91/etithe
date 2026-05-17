@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -39,7 +40,7 @@ export default function OnboardingDetailPage() {
         }
         setLoading(false);
       })
-      .catch((err) => {
+      .catch(() => {
         setError("Failed to load request");
         setLoading(false);
       });
@@ -64,7 +65,7 @@ export default function OnboardingDetailPage() {
       }
 
       router.push("/admin/onboarding");
-    } catch (err) {
+    } catch {
       setError("Network error");
     } finally {
       setSubmitting(false);
@@ -113,7 +114,7 @@ export default function OnboardingDetailPage() {
     <main className="shell">
       <section className="card">
         <div style={{ marginBottom: 24 }}>
-          <a
+          <Link
             href="/admin/onboarding"
             style={{
               color: "var(--primary)",
@@ -122,7 +123,7 @@ export default function OnboardingDetailPage() {
             }}
           >
             ← Back to Requests
-          </a>
+          </Link>
         </div>
 
         <h1 style={{ marginBottom: 8 }}>{request.organizationName}</h1>

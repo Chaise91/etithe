@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -41,7 +42,7 @@ export default function OnboardingPage() {
       setTimeout(() => {
         router.push("/login");
       }, 2000);
-    } catch (err) {
+    } catch {
       setError("Network error. Please try again.");
     } finally {
       setLoading(false);
@@ -56,7 +57,7 @@ export default function OnboardingPage() {
             <h2>Thank you!</h2>
             <p style={{ marginTop: 8, color: "var(--muted)" }}>
               Your onboarding request has been submitted and is under review. 
-              We'll be in touch shortly.
+              We&apos;ll be in touch shortly.
             </p>
             <p style={{ marginTop: 16, fontSize: "0.9em", color: "var(--muted)" }}>
               Redirecting to login...
@@ -153,9 +154,9 @@ export default function OnboardingPage() {
 
         <p style={{ marginTop: 24, fontSize: "0.9em", color: "var(--muted)", textAlign: "center" }}>
           Already registered?{" "}
-          <a href="/login" style={{ textDecoration: "underline", color: "var(--primary)" }}>
+          <Link href="/login" style={{ textDecoration: "underline", color: "var(--primary)" }}>
             Sign in
-          </a>
+          </Link>
         </p>
       </section>
     </main>

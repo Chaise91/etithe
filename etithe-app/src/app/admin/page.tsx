@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { desc, ne, sql } from "drizzle-orm";
 import { getDb } from "@/db";
@@ -77,9 +78,12 @@ export default async function AdminPage() {
             </p>
           </div>
           <div className="actions">
-            <a className="button ghost" href="/dashboard">
+            <Link className="button ghost" href="/admin/onboarding">
+              Onboarding queue
+            </Link>
+            <Link className="button ghost" href="/dashboard">
               Org Dashboard
-            </a>
+            </Link>
             <form action="/api/auth/logout" method="post">
               <button className="button primary" type="submit">
                 Sign out
@@ -118,9 +122,9 @@ export default async function AdminPage() {
             }}
           >
             <strong>{pendingCount} onboarding request{pendingCount !== 1 ? "s" : ""} pending review.</strong>{" "}
-            <a href="/admin/onboarding" style={{ color: "var(--primary)", textDecoration: "underline" }}>
+            <Link href="/admin/onboarding" style={{ color: "var(--primary)", textDecoration: "underline" }}>
               Review now →
-            </a>
+            </Link>
           </div>
         )}
       </section>

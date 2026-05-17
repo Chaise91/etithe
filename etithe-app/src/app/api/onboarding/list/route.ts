@@ -5,7 +5,7 @@ import { onboardingRequests, organizations } from "@/db/schema";
 import { readSessionFromCookies } from "@/lib/auth";
 import { withRequestLogging } from "@/lib/request-logging";
 
-async function handleList(request: Request) {
+async function handleList() {
   const session = await readSessionFromCookies();
   if (!session || (session.role !== "org_admin" && session.role !== "platform_admin")) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 403 });

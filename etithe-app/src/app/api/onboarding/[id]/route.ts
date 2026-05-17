@@ -3,10 +3,9 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { onboardingRequests, organizations } from "@/db/schema";
 import { readSessionFromCookies } from "@/lib/auth";
-import { withRequestLogging } from "@/lib/request-logging";
 
 async function handleGet(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
