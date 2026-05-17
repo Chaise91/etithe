@@ -14,9 +14,18 @@ export type SessionClaims = {
 const FALLBACK_EMAIL = "admin@church.org";
 const FALLBACK_PASSWORD = "changeme";
 
+const FALLBACK_PLATFORM_EMAIL = "root@etithe.io";
+const FALLBACK_PLATFORM_PASSWORD = "platformdev";
+
 export function validateCredentials(email: string, password: string): boolean {
   const expectedEmail = process.env.AUTH_DEMO_EMAIL ?? FALLBACK_EMAIL;
   const expectedPassword = process.env.AUTH_DEMO_PASSWORD ?? FALLBACK_PASSWORD;
+  return email === expectedEmail && password === expectedPassword;
+}
+
+export function validatePlatformAdminCredentials(email: string, password: string): boolean {
+  const expectedEmail = process.env.AUTH_PLATFORM_EMAIL ?? FALLBACK_PLATFORM_EMAIL;
+  const expectedPassword = process.env.AUTH_PLATFORM_PASSWORD ?? FALLBACK_PLATFORM_PASSWORD;
   return email === expectedEmail && password === expectedPassword;
 }
 
@@ -34,8 +43,11 @@ export async function buildSessionFromDb(email: string): Promise<SessionClaims |
   if (rows.length === 0) return null;
 
   const { organizationId, role } = rows[0];
+  // All three valid roles are preserved as-is
   const mappedRole: SessionClaims["role"] =
-    role === "org_admin" || role === "parishioner" ? role : "parishioner";
+    role === "platform_admin" || role === "org_admin" || role === "parishioner"
+      ? role
+      : "parishioner";
 
   return { userId: email, organizationId, role: mappedRole };
 }

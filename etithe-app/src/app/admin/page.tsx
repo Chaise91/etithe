@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
-import { donationSeed } from "@/lib/mock-data";
+import { desc, ne, sql } from "drizzle-orm";
+import { getDb } from "@/db";
+import { donations, organizations, onboardingRequests } from "@/db/schema";
 import { readSessionFromCookies } from "@/lib/auth";
 
 function money(value: number) {
@@ -10,7 +12,7 @@ function money(value: number) {
   }).format(value);
 }
 
-function formatDate(value: string) {
+function formatDate(value: Date | string) {
   return new Date(value).toLocaleString();
 }
 
@@ -21,23 +23,47 @@ export default async function AdminPage() {
     redirect("/login");
   }
 
-  if (session.role !== "org_admin") {
+  if (session.role !== "org_admin" && session.role !== "platform_admin") {
     redirect("/dashboard");
   }
 
-  const totalVolume = donationSeed.reduce((sum, donation) => sum + donation.amountUsd, 0);
-  const organizations = new Map(
-    donationSeed.map((donation) => [donation.organizationId, donation.organizationName]),
-  );
+  const db = getDb();
 
-  const donationsByOrg = donationSeed.reduce<Record<string, number>>((acc, donation) => {
-    acc[donation.organizationId] = (acc[donation.organizationId] ?? 0) + 1;
-    return acc;
-  }, {});
+  const [orgRows, donationRows, pendingRequests] = await Promise.all([
+    db
+      .select({
+        id: organizations.id,
+        name: organizations.name,
+        status: organizations.status,
+        donationCount: sql<number>`cast(count(${donations.id}) as int)`,
+        totalCents: sql<number>`cast(coalesce(sum(${donations.amountCents}), 0) as int)`,
+      })
+      .from(organizations)
+      .leftJoin(donations, sql`${donations.organizationId} = ${organizations.id}`)
+      .where(ne(organizations.id, "org_platform"))
+      .groupBy(organizations.id),
+    db
+      .select({
+        id: donations.id,
+        donorName: donations.donorName,
+        amountCents: donations.amountCents,
+        donatedAt: donations.donatedAt,
+        organizationId: donations.organizationId,
+        organizationName: organizations.name,
+      })
+      .from(donations)
+      .innerJoin(organizations, sql`${donations.organizationId} = ${organizations.id}`)
+      .orderBy(desc(donations.donatedAt))
+      .limit(5),
+    db
+      .select({ count: sql<number>`cast(count(*) as int)` })
+      .from(onboardingRequests)
+      .where(sql`${onboardingRequests.status} IN ('submitted', 'under_review')`),
+  ]);
 
-  const recentActivity = [...donationSeed]
-    .sort((a, b) => new Date(b.donatedAt).getTime() - new Date(a.donatedAt).getTime())
-    .slice(0, 5);
+  const totalCents = orgRows.reduce((sum, o) => sum + (o.totalCents ?? 0), 0);
+  const totalDonations = orgRows.reduce((sum, o) => sum + (o.donationCount ?? 0), 0);
+  const pendingCount = pendingRequests[0]?.count ?? 0;
 
   return (
     <main className="shell">
@@ -65,21 +91,38 @@ export default async function AdminPage() {
         <div className="stats-grid">
           <article className="stat-card">
             <p>Total Donation Volume</p>
-            <h2>{money(totalVolume)}</h2>
+            <h2>{money(totalCents / 100)}</h2>
           </article>
           <article className="stat-card">
             <p>Organizations Onboarded</p>
-            <h2>{organizations.size}</h2>
+            <h2>{orgRows.length}</h2>
           </article>
           <article className="stat-card">
             <p>Recorded Donations</p>
-            <h2>{donationSeed.length}</h2>
+            <h2>{totalDonations}</h2>
           </article>
           <article className="stat-card">
-            <p>Admin Session</p>
+            <p>{session.role === "platform_admin" ? "Platform Admin" : "Admin Session"}</p>
             <h2>{session.userId}</h2>
           </article>
         </div>
+
+        {pendingCount > 0 && (
+          <div
+            style={{
+              marginTop: 16,
+              padding: "12px 16px",
+              backgroundColor: "#fff8e1",
+              border: "1px solid #ffe082",
+              borderRadius: 4,
+            }}
+          >
+            <strong>{pendingCount} onboarding request{pendingCount !== 1 ? "s" : ""} pending review.</strong>{" "}
+            <a href="/admin/onboarding" style={{ color: "var(--primary)", textDecoration: "underline" }}>
+              Review now →
+            </a>
+          </div>
+        )}
       </section>
 
       <section className="card" style={{ marginTop: 16 }}>
@@ -90,17 +133,19 @@ export default async function AdminPage() {
               <th>Organization</th>
               <th>Org ID</th>
               <th>Donations</th>
+              <th>Volume</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody>
-            {Array.from(organizations.entries()).map(([id, name]) => (
-              <tr key={id}>
-                <td>{name}</td>
-                <td>{id}</td>
-                <td>{donationsByOrg[id] ?? 0}</td>
+            {orgRows.map((org) => (
+              <tr key={org.id}>
+                <td>{org.name}</td>
+                <td>{org.id}</td>
+                <td>{org.donationCount ?? 0}</td>
+                <td>{money((org.totalCents ?? 0) / 100)}</td>
                 <td>
-                  <span className="status-pill">Active</span>
+                  <span className="status-pill">{org.status}</span>
                 </td>
               </tr>
             ))}
@@ -121,12 +166,12 @@ export default async function AdminPage() {
             </tr>
           </thead>
           <tbody>
-            {recentActivity.map((donation) => (
+            {donationRows.map((donation) => (
               <tr key={donation.id}>
                 <td>{donation.id}</td>
                 <td>{donation.donorName}</td>
                 <td>{donation.organizationName}</td>
-                <td>{money(donation.amountUsd)}</td>
+                <td>{money(donation.amountCents / 100)}</td>
                 <td>{formatDate(donation.donatedAt)}</td>
               </tr>
             ))}

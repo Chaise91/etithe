@@ -25,9 +25,30 @@ spec:
         - name: NEXT_PUBLIC_APP_URL
           value: "http://localhost:3000"
         - name: AUTH_DEMO_EMAIL
-          value: "admin@church.org"
+          valueFrom:
+            secretKeyRef:
+              name: etithe-auth
+              key: demo-email
         - name: AUTH_DEMO_PASSWORD
-          value: "changeme"
+          valueFrom:
+            secretKeyRef:
+              name: etithe-auth
+              key: demo-password
+        - name: AUTH_PLATFORM_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: etithe-auth
+              key: platform-email
+        - name: AUTH_PLATFORM_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: etithe-auth
+              key: platform-password
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: etithe-db
+              key: database-url
         readinessProbe:
           httpGet:
             path: /api/health

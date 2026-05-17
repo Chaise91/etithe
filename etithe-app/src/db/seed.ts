@@ -23,6 +23,13 @@ const db = drizzle(pool, { schema });
 
 const seedOrganizations: schema.NewOrganization[] = [
   {
+    id: "org_platform",
+    name: "eTithe Platform",
+    slug: "etithe-platform",
+    status: "approved",
+    contactEmail: "root@etithe.io",
+  },
+  {
     id: "org_st_mark",
     name: "St. Mark Church",
     slug: "st-mark-church",
@@ -39,6 +46,11 @@ const seedOrganizations: schema.NewOrganization[] = [
 ];
 
 const seedUsers: schema.NewUser[] = [
+  {
+    id: "root@etithe.io",
+    organizationId: "org_platform",
+    role: "platform_admin",
+  },
   {
     id: "admin@church.org",
     organizationId: "org_st_mark",

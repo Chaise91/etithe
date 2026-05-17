@@ -8,6 +8,7 @@ import {
   SESSION_COOKIE,
   shouldUseSecureCookies,
   validateCredentials,
+  validatePlatformAdminCredentials,
 } from "@/lib/auth";
 import { withRequestLogging } from "@/lib/request-logging";
 
@@ -25,6 +26,26 @@ async function handleLogin(request: Request) {
   }
 
   const { email, password } = parsed.data;
+
+  // Platform admin credentials → root session (checked first to avoid DB lookup)
+  if (validatePlatformAdminCredentials(email, password)) {
+    const session = (await buildSessionFromDb(email)) ??
+      buildSession(email, "org_platform", "platform_admin");
+    const sessionToken = encodeSession(session);
+    const store = await cookies();
+    store.set({
+      name: SESSION_COOKIE,
+      value: sessionToken,
+      httpOnly: true,
+      sameSite: "lax",
+      secure: shouldUseSecureCookies(request),
+      path: "/",
+      maxAge: 60 * 60 * 8,
+    });
+    return NextResponse.json({ ok: true });
+  }
+
+  // Org user credentials
   if (!validateCredentials(email, password)) {
     return NextResponse.json({ message: "Invalid email or password" }, { status: 401 });
   }
