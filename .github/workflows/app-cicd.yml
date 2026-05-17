@@ -97,9 +97,23 @@ jobs:
             exit 1
           }
 
-      - name: Apply base manifests and update image
+      - name: Upsert Kubernetes secrets
         run: |
           kubectl apply -f etithe-app/k8s/base/namespace.yaml
+          kubectl create secret generic etithe-auth \
+            --namespace="$APP_NAMESPACE" \
+            --from-literal=demo-email="${{ secrets.AUTH_DEMO_EMAIL }}" \
+            --from-literal=demo-password="${{ secrets.AUTH_DEMO_PASSWORD }}" \
+            --from-literal=platform-email="${{ secrets.AUTH_PLATFORM_EMAIL }}" \
+            --from-literal=platform-password="${{ secrets.AUTH_PLATFORM_PASSWORD }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create secret generic etithe-db \
+            --namespace="$APP_NAMESPACE" \
+            --from-literal=database-url="${{ secrets.DATABASE_URL_PRIMARY }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Apply base manifests and update image
+        run: |
           kubectl apply -f etithe-app/k8s/base/service.yaml
           sed "s|PLACEHOLDER_IMAGE|${{ needs.build-and-push.outputs.image_uri }}|g" etithe-app/k8s/base/deployment.yaml | kubectl apply -f -
           kubectl -n "$APP_NAMESPACE" rollout status deployment/"$APP_DEPLOYMENT" --timeout=300s
@@ -140,9 +154,23 @@ jobs:
             exit 1
           }
 
-      - name: Apply base manifests and update image
+      - name: Upsert Kubernetes secrets
         run: |
           kubectl apply -f etithe-app/k8s/base/namespace.yaml
+          kubectl create secret generic etithe-auth \
+            --namespace="$APP_NAMESPACE" \
+            --from-literal=demo-email="${{ secrets.AUTH_DEMO_EMAIL }}" \
+            --from-literal=demo-password="${{ secrets.AUTH_DEMO_PASSWORD }}" \
+            --from-literal=platform-email="${{ secrets.AUTH_PLATFORM_EMAIL }}" \
+            --from-literal=platform-password="${{ secrets.AUTH_PLATFORM_PASSWORD }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create secret generic etithe-db \
+            --namespace="$APP_NAMESPACE" \
+            --from-literal=database-url="${{ secrets.DATABASE_URL_SECONDARY }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Apply base manifests and update image
+        run: |
           kubectl apply -f etithe-app/k8s/base/service.yaml
           sed "s|PLACEHOLDER_IMAGE|${{ needs.build-and-push.outputs.image_uri }}|g" etithe-app/k8s/base/deployment.yaml | kubectl apply -f -
           kubectl -n "$APP_NAMESPACE" rollout status deployment/"$APP_DEPLOYMENT" --timeout=300s
